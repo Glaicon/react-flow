@@ -24,19 +24,6 @@ const initialElements = [
   },
 ];
 
-// const initialScenario = new Array({
-//   key: 1,
-//   description: 'Cenário 1',
-//   scenarios: [
-//     {
-//       key: '',
-//       source: '',
-//       target: '',
-//       value: '',
-//     },
-//   ],
-// });
-
 const DnDFlow = () => {
   const [textAreaVisible, setTextAreaVisible] = useState(false);
   const [edgeVisible, setEdgeInputVisible] = useState(false);
@@ -89,7 +76,6 @@ const DnDFlow = () => {
   };
 
   const onEdgeDoubleClick = (edge) => {
-    console.log(edge);
     var node = elements.find((e) => e.id === edge.source);
     setModalPosition(node.position);
     setEdgeSelected(edge);
@@ -98,7 +84,6 @@ const DnDFlow = () => {
 
   const onNodeDoubleClick = (node) => {
     setModalPosition(node.position);
-    console.log(node);
     setNodeSelected(node);
     setTextAreaVisible(true);
   };
@@ -125,7 +110,6 @@ const DnDFlow = () => {
   };
 
   const modifyNodePosition = (node) => {
-    console.log(node);
     // Modify name value of de node selected.
     setElements((elements) =>
       elements.map((el) => {
@@ -138,7 +122,6 @@ const DnDFlow = () => {
             y: node.position.y,
           };
           setModalPosition(el.position);
-          console.log(el.position);
         }
 
         return el;
@@ -154,143 +137,119 @@ const DnDFlow = () => {
     setTextAreaVisible(false);
   };
 
-  const closeEdgeInput = () => {
+  const closeEdgeInput = (elementsSelecteds) => {
     // Clear the input area text and set text area visible false.
     setEdgeDescription('');
     setEdgeInputVisible(false);
   };
 
-  const generateScenarios3 = () => {
-    setDictionaries([]);
+  const getElementSelected = (connectionSelected) => {
+    var elementsSelecteds = elements.filter((el) => el.source === undefined);
+    console.log(elementsSelecteds);
+    return elementsSelecteds.filter(
+      (c) => c.id === connectionSelected.source
+    )[0];
+  };
+  const getConnectionSelected = (scenarioLast) => {
+    var connections = elements.filter((el) => el.source !== undefined);
+    return connections.filter((conn) => conn.target === scenarioLast.source)[0];
+  };
+
+  const generateScenarios = () => {
+    // console.log(scenarios);
+    // console.log(allDictionaries);
     var outputsList = elements.filter((e) => e.type === 'output');
     var connections = elements.filter((el) => el.source !== undefined);
-    var elementsSelecteds = elements.filter((el) => el.source === undefined);
 
-    console.log(outputsList);
     var maxKey = 1;
-    outputsList.forEach((out) => {
-      var connInitialOutput = connections.filter(
-        (conn) => conn.target === out.id
-      )[0];
-      var initialSource = out.id;
-      if (connInitialOutput.label) {
-        initialSource = (parseInt(out.id) + 1).toString();
-      }
-      var countConn = 0;
-      var key = maxKey++;
-      let scenarioInitial = {
-        key: `${out.id}-${countConn}`,
-        source: out.id,
-        target: out.id,
-        value: out.data.label,
-      };
-      let scenario = {
-        key: key,
-        description: `Cenário ${key}`,
-        scenarios: [
-          {
-            key: scenarioInitial.key,
-            source: initialSource,
-            target: scenarioInitial.target,
-            value: scenarioInitial.value,
-          },
-        ],
-      };
-      console.log(scenario);
-      console.log(scenarioInitial);
-      var scenarioLast = scenarioInitial;
-      do {
-        var connectionSelected = connections.filter(
-          (conn) => conn.target === scenarioLast.source
-        )[0];
-        // connections.forEach((conn) =>
-        // if (conn.target === s.source) {
-        console.log(connectionSelected);
-        console.log(connections);
-
-        var elementSelected = elementsSelecteds.filter(
-          (c) => c.id === connectionSelected.source
-        )[0];
-        console.log(elementSelected);
-        console.log(elementsSelecteds);
-        if (connectionSelected.label) {
-          scenarioLast = {
-            key: `${connectionSelected.source}-${connectionSelected.target}-${
-              countConn + 1
-            }`,
-            source: connectionSelected.source,
-            target: connectionSelected.target,
-            value: elementSelected.data.label,
-          };
-          scenario.scenarios.push(scenarioLast);
-          scenarioLast = {
-            key: `${connectionSelected.source}-${connectionSelected.target}-${countConn}`,
-            source: connectionSelected.source,
-            target: connectionSelected.target,
-            value: connectionSelected.label,
-          };
-          scenario.scenarios.push(scenarioLast);
-        } else {
-          scenarioLast = {
-            key: `${connectionSelected.source}-${connectionSelected.target}-${countConn}`,
-            source: connectionSelected.source,
-            target: connectionSelected.target,
-            value: elementSelected.data.label,
-          };
-          if (scenarioLast.source !== '0') {
+    // console.log(outputsList)
+    outputsList.forEach((output) => {
+      var connectionsByOutput = connections.filter(
+        (conn) => conn.target === output.id
+      );
+      console.log("connectionsByOutput");
+      console.log(connectionsByOutput);
+      connectionsByOutput.forEach((out) => {
+        // var connInitialOutput = connections.filter(
+        //   (conn) => conn.target === output.id
+        // )[0];
+        console.log(out)
+        // var initialSource = output.id;
+        // if (output.label) {
+        //   initialSource = (parseInt(out.id) + 1).toString();
+        // }
+        var countConn = 0;
+        var key = maxKey++;
+        let scenarioInitial = {
+          key: `${output.id}-${out.source}`,
+          source: out.source,
+          target: out.target,
+          value: output.data.label,
+        };
+        console.log(scenarioInitial)
+        let scenario = {
+          key: key,
+          description: `Cenário ${key}`,
+          scenarios: [
+            {
+              key: scenarioInitial.key,
+              source: scenarioInitial.source,
+              target: scenarioInitial.target,
+              value: scenarioInitial.value,
+              sequence: parseInt(output.id)
+            },
+          ],
+        };
+        var scenarioLast = scenarioInitial;
+        do {
+          var connectionSelected = getConnectionSelected(scenarioLast);
+          var elementSelected = getElementSelected(connectionSelected);
+          console.log(elementSelected)
+          if (connectionSelected.label) {
+            scenarioLast = {
+              key: `${scenario.key}-${connectionSelected.source}-${connectionSelected.target}-${countConn}`,
+              source: connectionSelected.source,
+              target: connectionSelected.target,
+              value: elementSelected.data.label,
+              sequence: parseInt(connectionSelected.source),
+            };
             scenario.scenarios.push(scenarioLast);
+            scenarioLast = {
+              key: `${scenario.key}-${connectionSelected.source}-${
+                connectionSelected.target
+              }-${countConn + 1}`,
+              source: connectionSelected.source,
+              target: connectionSelected.target,
+              value: connectionSelected.label,
+              sequence: parseInt(connectionSelected.source) + 1,
+            };
+            scenario.scenarios.push(scenarioLast);
+          } else {
+            scenarioLast = {
+              key: `${scenario.key}-${connectionSelected.source}-${connectionSelected.target}-${countConn}`,
+              source: connectionSelected.source,
+              target: connectionSelected.target,
+              value: elementSelected.data.label,
+              sequence: parseInt(connectionSelected.source) + 1,
+            };
+            if (scenarioLast.source !== '0') {
+              scenario.scenarios.push(scenarioLast);
+            }
+            countConn++;
           }
-          countConn++;
-        }
-      } while (scenarioLast.source !== '0');
-      scenario.scenarios.sort((a, b) => a.source - b.source);
-      allDictionaries.push(scenario);
-      // scenario.scenarios.forEach((s) => {
-      //   console.log(s)
-      //   var connectionSelected = connections.filter(
-      //     (conn) => conn.target === s.target
-      //   );
-      //   // connections.forEach((conn) =>
-      //   // if (conn.target === s.source) {
-      //     console.log(connectionSelected)
-      //     // console.log(connections)
-
-      //   var elementSelected = elementsSelecteds.filter(
-      //     (c) => c.id === connectionSelected.target
-      //   );
-      //   console.log(elementSelected)
-      //   console.log(elementsSelecteds)
-      //   if (connectionSelected.label) {
-      //     var scen = {
-      //       key: `${connectionSelected.source}-${connectionSelected.target}-${countConn}`,
-      //       source: connectionSelected.source,
-      //       target: connectionSelected.target,
-      //       value: connectionSelected.label,
-      //     };
-      //   } else {
-      //     scen = {
-      //       key: `${connectionSelected.source}-${connectionSelected.target}-${countConn}`,
-      //       source: connectionSelected.source,
-      //       target: connectionSelected.target,
-      //       value: elementSelected.data.label,
-      //     };
-      //   }
-      //   scenario.scenarios.push(scen);
-      //   // }
-      //   // });
-      //   countConn++;
-      // });
-
-      console.log(scenario.scenarios);
-      console.log(allDictionaries);
-      // allDictionaries.push(scenario);
-      setDictionaries(allDictionaries);
+        } while (scenarioLast.source !== '0');
+        scenario.scenarios.sort((a, b) => a.source - b.source);
+        allDictionaries.push(scenario);
+        setDictionaries(allDictionaries);
+        console.log(allDictionaries);
+      });
     });
-    // });
+
+    // Fills the scenarios in the painel.
     var listValues = [];
     allDictionaries.forEach((element) => {
       listValues.push(
-        <div key={element.key + '-dic'}>
+        <div id={'scenario-' + element.key}>
           <h2>{element.description}</h2>
           {element.scenarios.map((sce) => {
             return (
@@ -302,231 +261,9 @@ const DnDFlow = () => {
         </div>
       );
     });
+    // Clean the dictionary.
+    setDictionaries([]);
     setScenarios(listValues);
-  };
-
-  const generateScenarios2 = () => {
-    console.log(allDictionaries);
-    elements.sort((a, b) => a.source - b.source);
-    var connections = elements.filter((el) => el.source !== undefined);
-    var elementsSelecteds = elements.filter(
-      (el) => el.source === undefined && el.id !== 0
-    );
-    var countConn = 0;
-    connections.forEach((conn) => {
-      var elementSelected = elementsSelecteds.filter(
-        (c) => c.id === conn.target
-      )[0];
-      var connection = allDictionaries.filter((c) =>
-        c.scenarios.filter((sce) => sce.source === conn.source)
-      );
-      let keys = allDictionaries.map((a) => a.key);
-      var maxKey = Math.max(...keys);
-      if (connection) {
-        setDictionaries((allDictionaries) =>
-          allDictionaries.map((el) => {
-            console.log('Connection');
-            console.log(connection);
-            console.log(el.scenarios);
-            var scenarios = el.scenarios.filter(
-              (scen) => scen.source !== connection.scenarios[0].source
-            );
-            if (conn.label) {
-              el.key = maxKey++;
-              el.description = `Cenário ${el.key}`;
-              el.scenarios = {
-                ...scenarios,
-                key: `${conn.source}-${conn.target}-${countConn}`,
-                source: conn.source,
-                target: conn.target,
-                value: conn.label,
-              };
-            } else {
-              el.key = maxKey++;
-              el.description = `Cenário ${el.key}`;
-              el.scenarios = {
-                ...scenarios,
-                key: `${conn.source}-${conn.target}-${countConn}`,
-                source: conn.source,
-                target: conn.target,
-                value: elementSelected.data.label,
-              };
-            }
-            return el;
-          })
-        );
-        // } else {
-        //   console.log("ENTROU AQUI")
-        //   setDictionaries((dicts) =>
-        //     dicts.dictionaries.map((el) => {
-        //       var dictSelected = el.scenarios.filter(
-        //         (sc) => sc.source === conn.source
-        //       )[0];
-        //       if (conn.label) {
-        //         if (dictSelected) {
-        //           el.key = dictSelected.key;
-        //           el.description = dictSelected.description;
-        //           el.scenarios = {
-        //             ...el.scenarios,
-        //             key: `${conn.source}-${conn.target}-${countConn}`,
-        //             source: conn.source,
-        //             target: conn.target,
-        //             value: conn.label,
-        //           };
-        //         }
-        //       } else {
-        //         if (dictSelected) {
-        //           el.key = dictSelected.key;
-        //           el.description = dictSelected.description;
-        //           el.scenarios = {
-        //             ...el.scenarios,
-        //             key: `${conn.source}-${conn.target}-${countConn}`,
-        //             source: conn.source,
-        //             target: conn.target,
-        //             value: elementSelected.data.label,
-        //           };
-        //         }
-        //       }
-        //       return dicts;
-        //     })
-        //   );
-      }
-    });
-    //   }
-    //     var maxKey = Math.max(...allDictionaries.dictionaries.keys);
-    //    allDictionaries.dictionaries.push({
-    //     key: maxKey++,
-    //     description: `Cenário ${key}`,
-    //     scenarios: [
-    //       ...scenarios,{
-    //         key: `${conn.source}-${conn.target}-${countConn}`,
-    //         source: conn.source,
-    //         target: conn.target,
-    //         value: elementSelected.data.label,
-    //       },
-    //     ]
-    //    })
-    //    setDictionaries(allDictionaries);
-    //   } else {
-    //     var elementSelected = elementsSelecteds.filter(
-    //       (el) => el.id === conn.target
-    //     )[0];
-    //     console.log(elementSelected);
-    //     if (conn.label) {
-    //       var key = "";
-    //       if (
-    //         dictScenarios.filter(
-    //           (a) => a.key === `${conn.source}-${conn.target}-${countConn}`
-    //         )
-    //       ) {
-    //         key = `${conn.source}-${conn.target}-${countConn + 1}`;
-    //       } else {
-    //         key = `${conn.source}-${conn.target}-${countConn}`;
-    //       }
-    //       dictScenarios.push({
-    //         key: key,
-    //         source: conn.source,
-    //         target: conn.target,
-    //         value: conn.label,
-    //       });
-    //     }
-    //     dictScenarios.push({
-    //       key: `${conn.source}-${conn.target}-${countConn}`,
-    //       source: conn.source,
-    //       target: conn.target,
-    //       value: elementSelected.data.label,
-    //       lastNode: elementSelected.type === "output",
-    //     });
-    //   }
-    // });
-    var listValues = [];
-    allDictionaries.forEach((element) => {
-      listValues.push(
-        <>
-          <h2>{element.description}</h2>
-          {element.scenarios.forEach((sce) => {
-            return (
-              <p id={sce.key} style={{marginLeft: '1%'}}>
-                {sce.value}
-              </p>
-            );
-          })}
-          ;
-        </>
-      );
-    });
-    setScenarios(listValues);
-
-    console.log(allDictionaries);
-    console.log(connections);
-    console.log(elements);
-  };
-
-  const createDictionary = () => {};
-  const generateScenarios = () => {
-    var dictScenarios = []; // create an empty array
-    elements.sort((a, b) => a.source - b.source);
-    var connections = elements.filter((el) => el.source !== undefined);
-    var elementsSelecteds = elements.filter((el) => el.source === undefined);
-    // Started of first Node, id 0.
-    var firstNodeConnection = connections.filter((el) => el.source === '0');
-    console.log(firstNodeConnection);
-    var countConn = 0;
-    elementsSelecteds.forEach((e) => {
-      connections.forEach((c) => {
-        if (e.id === c.target) {
-          if (!dictScenarios.find((e) => e.source === c.source)) {
-            if (c.label) {
-              var key = '';
-              if (
-                dictScenarios.filter(
-                  (a) => a.key === `${c.source}-${c.target}-${countConn}`
-                )
-              ) {
-                key = `${c.source}-${c.target}-${countConn}`;
-              } else {
-                key = `${c.source}-${c.target}-${countConn + 1}`;
-              }
-              dictScenarios.push({
-                key: key,
-                source: c.source,
-                target: c.target,
-                value: c.label,
-              });
-            }
-            dictScenarios.push({
-              key: `${c.source}-${c.target}-${countConn}`,
-              source: c.source,
-              target: c.target,
-              value: e.data.label,
-            });
-            countConn++;
-          } else {
-            var connects = elements.filter((e) => e.source === c.source);
-            console.log(connects);
-            if (connects) {
-              connections = connections.filter((x) => {
-                return x.source !== c.source && x.target !== c.target && x.id;
-              });
-            }
-          }
-        }
-      });
-    });
-    var listValues = [];
-    dictScenarios.forEach((element) => {
-      listValues.push(
-        <p id={element.key} style={{marginLeft: '1%'}}>
-          {element.value}
-        </p>
-      );
-    });
-
-    setScenarios(listValues);
-
-    console.log(dictScenarios);
-    console.log(connections);
-    console.log(elements);
   };
 
   const onDrop = (event) => {
@@ -539,16 +276,12 @@ const DnDFlow = () => {
       y: event.clientY - reactFlowBounds.top,
     });
     var ids = [];
-    console.log(elements);
     elements.forEach((el) => {
       if (el.id && el.source === undefined) {
-        console.log(el.id);
         ids.push(parseInt(el.id));
       }
     });
-    console.log(ids);
     var lastId = Math.max(...ids);
-    console.log(lastId);
     const newNode = {
       id: `${lastId + 1}`,
       type,
@@ -678,7 +411,7 @@ const DnDFlow = () => {
           </div>
         </ReactFlowProvider>
         <div className="scenarios__controls">
-          <Button style={{margin: '10px'}} onClick={() => generateScenarios3()}>
+          <Button style={{margin: '10px'}} onClick={() => generateScenarios()}>
             Gerar Cenários
           </Button>
           {scenarios}
