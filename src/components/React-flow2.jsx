@@ -147,7 +147,7 @@ const DnDFlow = () => {
     var elementsSelecteds = elements.filter((el) => el.source === undefined);
     console.log(elementsSelecteds);
     return elementsSelecteds.filter(
-      (c) => c.id === connectionSelected.source
+      (c) => c.id === connectionSelected.target
     )[0];
   };
   const getConnectionSelected = (scenarioLast) => {
@@ -203,17 +203,14 @@ const DnDFlow = () => {
         var scenarioLast = scenarioInitial;
         do {
           var connectionSelected = getConnectionSelected(scenarioLast);
+          console.log("connectionSelected")
+          console.log(connectionSelected)
+          
           var elementSelected = getElementSelected(connectionSelected);
+          console.log("elementSelected")
           console.log(elementSelected)
           if (connectionSelected.label) {
-            scenarioLast = {
-              key: `${scenario.key}-${connectionSelected.source}-${connectionSelected.target}-${countConn}`,
-              source: connectionSelected.source,
-              target: connectionSelected.target,
-              value: elementSelected.data.label,
-              sequence: parseInt(connectionSelected.source),
-            };
-            scenario.scenarios.push(scenarioLast);
+
             scenarioLast = {
               key: `${scenario.key}-${connectionSelected.source}-${
                 connectionSelected.target
@@ -221,7 +218,15 @@ const DnDFlow = () => {
               source: connectionSelected.source,
               target: connectionSelected.target,
               value: connectionSelected.label,
-              sequence: parseInt(connectionSelected.source) + 1,
+              sequence: parseInt(connectionSelected.source),
+            };
+            scenario.scenarios.push(scenarioLast);
+            scenarioLast = {
+              key: `${scenario.key}-${connectionSelected.source}-${connectionSelected.target}-${countConn}`,
+              source: connectionSelected.source,
+              target: connectionSelected.target,
+              value: elementSelected.data.label,
+              sequence: parseInt(connectionSelected.source),
             };
             scenario.scenarios.push(scenarioLast);
           } else {
@@ -232,7 +237,7 @@ const DnDFlow = () => {
               value: elementSelected.data.label,
               sequence: parseInt(connectionSelected.source) + 1,
             };
-            if (scenarioLast.source !== '0') {
+            if (elementSelected.id !== '0') {
               scenario.scenarios.push(scenarioLast);
             }
             countConn++;
