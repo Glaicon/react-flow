@@ -197,11 +197,9 @@ const DnDFlow = () => {
           var connectionSelected = getConnectionSelected(scenarioLast);
           console.log('connectionSelected');
           console.log(connectionSelected);
-
           var elementSelected = getElementSelected(connectionSelected);
           console.log('elementSelected');
           console.log(elementSelected);
-          var connByNode = getConnection(elementSelected.id);
           if (connectionSelected.label) {
             scenarioLast = {
               key: `${scenario.key}-${connectionSelected.source}-${connectionSelected.target
@@ -214,10 +212,12 @@ const DnDFlow = () => {
             };
             scenario.scenarios.push(scenarioLast);
             scenarioLast = {
-              key: `${scenario.key}-${connectionSelected.source}-${connectionSelected.target}-${countConn}`,
+              key: `${scenario.key}-${connectionSelected.source}-${
+                connectionSelected.target
+              }-${countConn + 1}`,
               source: connectionSelected.source,
               target: connectionSelected.target,
-              value: elementSelected.data.label,
+              value: connectionSelected.label,
               sequence: parseInt(connectionSelected.source),
             };
             scenario.scenarios.push(scenarioLast);
