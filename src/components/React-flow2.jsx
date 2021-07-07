@@ -154,30 +154,23 @@ const DnDFlow = () => {
     var connections = elements.filter((el) => el.source !== undefined);
     return connections.filter((conn) => conn.target === scenarioLast.source)[0];
   };
+  const getConnection = (nodeId) => {
+    var connections = elements.filter((el) => el.source !== undefined);
+    return connections.filter((conn) => conn.source === nodeId)[0];
+  };
 
   const generateScenarios = () => {
-    // console.log(scenarios);
-    // console.log(allDictionaries);
     var outputsList = elements.filter((e) => e.type === 'output');
     var connections = elements.filter((el) => el.source !== undefined);
 
     var maxKey = 1;
-    // console.log(outputsList)
     outputsList.forEach((output) => {
       var connectionsByOutput = connections.filter(
         (conn) => conn.target === output.id
       );
-      console.log("connectionsByOutput");
+      console.log('connectionsByOutput');
       console.log(connectionsByOutput);
       connectionsByOutput.forEach((out) => {
-        // var connInitialOutput = connections.filter(
-        //   (conn) => conn.target === output.id
-        // )[0];
-        console.log(out)
-        // var initialSource = output.id;
-        // if (output.label) {
-        //   initialSource = (parseInt(out.id) + 1).toString();
-        // }
         var countConn = 0;
         var key = maxKey++;
         let scenarioInitial = {
@@ -186,7 +179,6 @@ const DnDFlow = () => {
           target: out.target,
           value: output.data.label,
         };
-        console.log(scenarioInitial)
         let scenario = {
           key: key,
           description: `Cenário ${key}`,
@@ -196,21 +188,30 @@ const DnDFlow = () => {
               source: scenarioInitial.source,
               target: scenarioInitial.target,
               value: scenarioInitial.value,
-              sequence: parseInt(output.id)
+              sequence: parseInt(output.id),
             },
           ],
         };
         var scenarioLast = scenarioInitial;
         do {
           var connectionSelected = getConnectionSelected(scenarioLast);
-          console.log("connectionSelected")
-          console.log(connectionSelected)
-          
-          var elementSelected = getElementSelected(connectionSelected);
-          console.log("elementSelected")
-          console.log(elementSelected)
-          if (connectionSelected.label) {
+          console.log('connectionSelected');
+          console.log(connectionSelected);
 
+          var elementSelected = getElementSelected(connectionSelected);
+          console.log('elementSelected');
+          console.log(elementSelected);
+          var connByNode = getConnection(elementSelected.id);
+          if (connByNode.label) {
+            scenarioLast = {
+              key: `${scenario.key}-${connectionSelected.source}-${connectionSelected.target}-${countConn}`,
+              source: connectionSelected.source,
+              target: connectionSelected.target,
+              value:
+                  `${elementSelected.data.label} (${connByNode.label})`,
+              sequence: parseInt(connectionSelected.source),
+            };
+            scenario.scenarios.push(scenarioLast);
             scenarioLast = {
               key: `${scenario.key}-${connectionSelected.source}-${
                 connectionSelected.target
@@ -218,14 +219,6 @@ const DnDFlow = () => {
               source: connectionSelected.source,
               target: connectionSelected.target,
               value: connectionSelected.label,
-              sequence: parseInt(connectionSelected.source),
-            };
-            scenario.scenarios.push(scenarioLast);
-            scenarioLast = {
-              key: `${scenario.key}-${connectionSelected.source}-${connectionSelected.target}-${countConn}`,
-              source: connectionSelected.source,
-              target: connectionSelected.target,
-              value: elementSelected.data.label,
               sequence: parseInt(connectionSelected.source),
             };
             scenario.scenarios.push(scenarioLast);
