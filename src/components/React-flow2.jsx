@@ -1,4 +1,4 @@
-import React, {useState, useRef} from 'react';
+import React, { useState, useRef } from 'react';
 import ReactFlow, {
   ReactFlowProvider,
   addEdge,
@@ -8,19 +8,19 @@ import ReactFlow, {
   Background,
   updateEdge,
 } from 'react-flow-renderer';
-import {Input, Button} from 'antd';
-import {IoIosCheckmarkCircle, IoIosCloseCircle} from 'react-icons/io';
+import { Input, Button } from 'antd';
+import { IoIosCheckmarkCircle, IoIosCloseCircle } from 'react-icons/io';
 import SideBar from './Sidebar';
 import CustomEdge from './CustomEdge';
 import './index.css';
-const {TextArea} = Input;
+const { TextArea } = Input;
 
 const initialElements = [
   {
     id: '0',
     type: 'input',
-    data: {label: 'Start'},
-    position: {x: 250, y: 5},
+    data: { label: 'Start' },
+    position: { x: 250, y: 5 },
   },
 ];
 
@@ -154,30 +154,23 @@ const DnDFlow = () => {
     var connections = elements.filter((el) => el.source !== undefined);
     return connections.filter((conn) => conn.target === scenarioLast.source)[0];
   };
+  const getConnection = (nodeId) => {
+    var connections = elements.filter((el) => el.source !== undefined);
+    return connections.filter((conn) => conn.source === nodeId)[0];
+  };
 
   const generateScenarios = () => {
-    // console.log(scenarios);
-    // console.log(allDictionaries);
     var outputsList = elements.filter((e) => e.type === 'output');
     var connections = elements.filter((el) => el.source !== undefined);
 
     var maxKey = 1;
-    // console.log(outputsList)
     outputsList.forEach((output) => {
       var connectionsByOutput = connections.filter(
         (conn) => conn.target === output.id
       );
-      console.log("connectionsByOutput");
+      console.log('connectionsByOutput');
       console.log(connectionsByOutput);
       connectionsByOutput.forEach((out) => {
-        // var connInitialOutput = connections.filter(
-        //   (conn) => conn.target === output.id
-        // )[0];
-        console.log(out)
-        // var initialSource = output.id;
-        // if (output.label) {
-        //   initialSource = (parseInt(out.id) + 1).toString();
-        // }
         var countConn = 0;
         var key = maxKey++;
         let scenarioInitial = {
@@ -186,7 +179,6 @@ const DnDFlow = () => {
           target: out.target,
           value: output.data.label,
         };
-        console.log(scenarioInitial)
         let scenario = {
           key: key,
           description: `Cenário ${key}`,
@@ -196,28 +188,28 @@ const DnDFlow = () => {
               source: scenarioInitial.source,
               target: scenarioInitial.target,
               value: scenarioInitial.value,
-              sequence: parseInt(output.id)
+              sequence: parseInt(output.id),
             },
           ],
         };
         var scenarioLast = scenarioInitial;
         do {
           var connectionSelected = getConnectionSelected(scenarioLast);
-          console.log("connectionSelected")
-          console.log(connectionSelected)
-          
-          var elementSelected = getElementSelected(connectionSelected);
-          console.log("elementSelected")
-          console.log(elementSelected)
-          if (connectionSelected.label) {
+          console.log('connectionSelected');
+          console.log(connectionSelected);
 
+          var elementSelected = getElementSelected(connectionSelected);
+          console.log('elementSelected');
+          console.log(elementSelected);
+          var connByNode = getConnection(elementSelected.id);
+          if (connectionSelected.label) {
             scenarioLast = {
-              key: `${scenario.key}-${connectionSelected.source}-${
-                connectionSelected.target
-              }-${countConn + 1}`,
+              key: `${scenario.key}-${connectionSelected.source}-${connectionSelected.target
+                }-${countConn + 1}`,
               source: connectionSelected.source,
               target: connectionSelected.target,
               value: connectionSelected.label,
+              isConnection: true,
               sequence: parseInt(connectionSelected.source),
             };
             scenario.scenarios.push(scenarioLast);
@@ -256,12 +248,17 @@ const DnDFlow = () => {
       listValues.push(
         <div id={'scenario-' + element.key}>
           <h2>{element.description}</h2>
-          {element.scenarios.map((sce) => {
-            return (
-              <p id={sce.key} style={{marginLeft: '1%'}}>
-                {sce.value}
-              </p>
-            );
+          {element.scenarios.map((sce, index) => {
+            var nextIndex = index + 1;
+            const nextElement = element.scenarios[nextIndex];
+            console.log(nextElement)
+            if (sce.isConnection === undefined) {
+              return (
+                <p id={sce.key} style={{ marginLeft: '1%' }}>
+                  {nextElement && nextElement.isConnection ? `${sce.value} (${nextElement.value})` : sce.value}
+                </p>
+              );
+            }
           })}
         </div>
       );
@@ -291,7 +288,7 @@ const DnDFlow = () => {
       id: `${lastId + 1}`,
       type,
       position,
-      data: {label: `${type} node`},
+      data: { label: `${type} node` },
     };
 
     setElements((es) => es.concat(newNode));
@@ -416,7 +413,7 @@ const DnDFlow = () => {
           </div>
         </ReactFlowProvider>
         <div className="scenarios__controls">
-          <Button style={{margin: '10px'}} onClick={() => generateScenarios()}>
+          <Button style={{ margin: '10px' }} onClick={() => generateScenarios()}>
             Gerar Cenários
           </Button>
           {scenarios}
