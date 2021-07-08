@@ -426,8 +426,8 @@
 .scenarios__controls {
   /* bottom: 10px; */
   margin-top: 1%;
-  margin-bottom: 50%;
-  position: absolute;
+  margin-bottom: 1%;
+  position: relative;
   width: 98%;
   left: 10px; 
   right: 10px; 
@@ -450,4 +450,13 @@
 
 .react-flow__edge-path {
   fill: none;
+}
+
+.paineltxa {
+  margin-top: 1%;
+  margin-bottom: 10px;
+  margin-right: 10px;
+  margin-left: 10px;
+  position: relative;
+  box-shadow: 0 0 2px 1px rgb(0 0 0 / 20%);
 }

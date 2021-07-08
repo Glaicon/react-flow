@@ -195,11 +195,7 @@ const DnDFlow = () => {
         var scenarioLast = scenarioInitial;
         do {
           var connectionSelected = getConnectionSelected(scenarioLast);
-          console.log('connectionSelected');
-          console.log(connectionSelected);
           var elementSelected = getElementSelected(connectionSelected);
-          console.log('elementSelected');
-          console.log(elementSelected);
           if (connectionSelected.label) {
             scenarioLast = {
               key: `${scenario.key}-${connectionSelected.source}-${connectionSelected.target
@@ -212,12 +208,11 @@ const DnDFlow = () => {
             };
             scenario.scenarios.push(scenarioLast);
             scenarioLast = {
-              key: `${scenario.key}-${connectionSelected.source}-${
-                connectionSelected.target
-              }-${countConn + 1}`,
+              key: `${scenario.key}-${connectionSelected.source}-${connectionSelected.target
+                }-${countConn + 1}`,
               source: connectionSelected.source,
               target: connectionSelected.target,
-              value: connectionSelected.label,
+              value: elementSelected.data.label,
               sequence: parseInt(connectionSelected.source),
             };
             scenario.scenarios.push(scenarioLast);
@@ -247,19 +242,21 @@ const DnDFlow = () => {
     allDictionaries.forEach((element) => {
       listValues.push(
         <div id={'scenario-' + element.key}>
-          <h2>{element.description}</h2>
-          {element.scenarios.map((sce, index) => {
-            var nextIndex = index + 1;
-            const nextElement = element.scenarios[nextIndex];
-            console.log(nextElement)
-            if (sce.isConnection === undefined) {
-              return (
-                <p id={sce.key} style={{ marginLeft: '1%' }}>
-                  {nextElement && nextElement.isConnection ? `${sce.value} (${nextElement.value})` : sce.value}
-                </p>
-              );
-            }
-          })}
+          <h2 style={{ marginLeft: 5 }}>{element.description}</h2>
+          <ul>
+            {element.scenarios.map((sce, index) => {
+              var nextIndex = index + 1;
+              const nextElement = element.scenarios[nextIndex];
+              console.log(nextElement)
+              if (sce.isConnection === undefined) {
+                return (
+                  <p id={sce.key} style={{ marginLeft: '1%' }}>
+                    <li>{nextElement && nextElement.isConnection ? `${sce.value} (${nextElement.value})` : sce.value}</li>
+                  </p>
+                );
+              }
+            })}
+          </ul>
         </div>
       );
     });
@@ -295,131 +292,137 @@ const DnDFlow = () => {
   };
 
   return (
-    <div className="wrapper">
-      <div className="dndflow">
-        <ReactFlowProvider>
-          <div className="reactflow-wrapper" ref={reactFlowWrapper}>
-            <ReactFlow
-              elements={elements}
-              onConnect={onConnect}
-              onElementsRemove={onElementsRemove}
-              onLoad={onLoad}
-              onDrop={onDrop}
-              onDragOver={onDragOver}
-              onNodeDoubleClick={(event, node) => onNodeDoubleClick(node)}
-              onNodeDragStop={(event, node) => {
-                modifyNodePosition(node);
-              }}
-              onEdgeDoubleClick={(event, node) => onEdgeDoubleClick(node)}
-              onEdgeUpdate={onEdgeUpdate}
-              snapToGrid={true}
-              edgeTypes={edgeTypes}
-              key="edges"
-            >
-              {textAreaVisible && (
-                <>
-                  <TextArea
-                    id="txta-node-name"
-                    autoFocus
-                    showCount
-                    value={nodeName}
-                    maxLength={100}
-                    placeholder="Altere aqui"
-                    style={{
-                      position: 'absolute',
-                      left: `${modalPosition.x}px`,
-                      top: `${modalPosition.y}px`,
-                      zIndex: 10,
-                    }}
-                    onChange={(event) => setNodeNameValue(event.target.value)}
-                  />
-                  <Button
-                    type="primary"
-                    shape="circle"
-                    icon={<IoIosCheckmarkCircle />}
-                    style={{
-                      position: 'absolute',
-                      left: `${modalPosition.x + 205}px`,
-                      top: `${modalPosition.y - 5}px`,
-                      zIndex: 10,
-                      backgroundColor: '#4CAF50',
-                    }}
-                    onClick={() => modifyTextInputArea()}
-                  />
-                  <Button
-                    type="primary"
-                    danger
-                    shape="circle"
-                    icon={<IoIosCloseCircle />}
-                    style={{
-                      position: 'absolute',
-                      left: `${modalPosition.x + 205}px`,
-                      top: `${modalPosition.y + 35}px`,
-                      zIndex: 10,
-                    }}
-                    onClick={() => closeInputArea()}
-                  />
-                </>
-              )}
-              {edgeVisible && (
-                <>
-                  <Input
-                    id="txt-edge"
-                    autoFocus
-                    value={edgeDescription}
-                    placeholder="Altere aqui"
-                    style={{
-                      width: '200px',
-                      position: 'absolute',
-                      left: `${modalPosition.x}px`,
-                      top: `${modalPosition.y + 100}px`,
-                      zIndex: 10,
-                    }}
-                    onChange={(event) => setEdgeDescription(event.target.value)}
-                  />
-                  <Button
-                    type="primary"
-                    shape="circle"
-                    icon={<IoIosCheckmarkCircle />}
-                    style={{
-                      position: 'absolute',
-                      left: `${modalPosition.x + 205}px`,
-                      top: `${modalPosition.y + 100}px`,
-                      zIndex: 10,
-                      backgroundColor: '#4CAF50',
-                    }}
-                    onClick={() => onEdgeUpdateText()}
-                  />
-                  <Button
-                    type="primary"
-                    danger
-                    shape="circle"
-                    icon={<IoIosCloseCircle />}
-                    style={{
-                      position: 'absolute',
-                      left: `${modalPosition.x + 240}px`,
-                      top: `${modalPosition.y + 100}px`,
-                      zIndex: 10,
-                    }}
-                    onClick={() => closeEdgeInput()}
-                  />
-                </>
-              )}
-              <MiniMap />
-              <Controls />
-              <SideBar />
-              <Background />
-            </ReactFlow>
+    <>
+
+      <div className="wrapper">
+        <div className="paineltxa">
+          <TextArea rows={5} autoSize placeholder="Escreva aqui..." />
+        </div>
+        <div className="dndflow">
+          <ReactFlowProvider>
+            <div className="reactflow-wrapper" ref={reactFlowWrapper}>
+              <ReactFlow
+                elements={elements}
+                onConnect={onConnect}
+                onElementsRemove={onElementsRemove}
+                onLoad={onLoad}
+                onDrop={onDrop}
+                onDragOver={onDragOver}
+                onNodeDoubleClick={(event, node) => onNodeDoubleClick(node)}
+                onNodeDragStop={(event, node) => {
+                  modifyNodePosition(node);
+                }}
+                onEdgeDoubleClick={(event, node) => onEdgeDoubleClick(node)}
+                onEdgeUpdate={onEdgeUpdate}
+                snapToGrid={true}
+                edgeTypes={edgeTypes}
+                key="edges"
+              >
+                {textAreaVisible && (
+                  <>
+                    <TextArea
+                      id="txta-node-name"
+                      autoFocus
+                      showCount
+                      value={nodeName}
+                      maxLength={100}
+                      placeholder="Altere aqui"
+                      style={{
+                        position: 'absolute',
+                        left: `${modalPosition.x}px`,
+                        top: `${modalPosition.y}px`,
+                        zIndex: 10,
+                      }}
+                      onChange={(event) => setNodeNameValue(event.target.value)}
+                    />
+                    <Button
+                      type="primary"
+                      shape="circle"
+                      icon={<IoIosCheckmarkCircle />}
+                      style={{
+                        position: 'absolute',
+                        left: `${modalPosition.x + 205}px`,
+                        top: `${modalPosition.y - 5}px`,
+                        zIndex: 10,
+                        backgroundColor: '#4CAF50',
+                      }}
+                      onClick={() => modifyTextInputArea()}
+                    />
+                    <Button
+                      type="primary"
+                      danger
+                      shape="circle"
+                      icon={<IoIosCloseCircle />}
+                      style={{
+                        position: 'absolute',
+                        left: `${modalPosition.x + 205}px`,
+                        top: `${modalPosition.y + 35}px`,
+                        zIndex: 10,
+                      }}
+                      onClick={() => closeInputArea()}
+                    />
+                  </>
+                )}
+                {edgeVisible && (
+                  <>
+                    <Input
+                      id="txt-edge"
+                      autoFocus
+                      value={edgeDescription}
+                      placeholder="Altere aqui"
+                      style={{
+                        width: '200px',
+                        position: 'absolute',
+                        left: `${modalPosition.x}px`,
+                        top: `${modalPosition.y + 100}px`,
+                        zIndex: 10,
+                      }}
+                      onChange={(event) => setEdgeDescription(event.target.value)}
+                    />
+                    <Button
+                      type="primary"
+                      shape="circle"
+                      icon={<IoIosCheckmarkCircle />}
+                      style={{
+                        position: 'absolute',
+                        left: `${modalPosition.x + 205}px`,
+                        top: `${modalPosition.y + 100}px`,
+                        zIndex: 10,
+                        backgroundColor: '#4CAF50',
+                      }}
+                      onClick={() => onEdgeUpdateText()}
+                    />
+                    <Button
+                      type="primary"
+                      danger
+                      shape="circle"
+                      icon={<IoIosCloseCircle />}
+                      style={{
+                        position: 'absolute',
+                        left: `${modalPosition.x + 240}px`,
+                        top: `${modalPosition.y + 100}px`,
+                        zIndex: 10,
+                      }}
+                      onClick={() => closeEdgeInput()}
+                    />
+                  </>
+                )}
+                <MiniMap />
+                <Controls />
+                <SideBar />
+                <Background />
+              </ReactFlow>
+            </div>
+          </ReactFlowProvider>
+          <div className="scenarios__controls">
+            <Button style={{ margin: '10px' }} onClick={() => generateScenarios()}>
+              Gerar Cenários
+            </Button>
+            {scenarios}
           </div>
-        </ReactFlowProvider>
-        <div className="scenarios__controls">
-          <Button style={{ margin: '10px' }} onClick={() => generateScenarios()}>
-            Gerar Cenários
-          </Button>
-          {scenarios}
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
