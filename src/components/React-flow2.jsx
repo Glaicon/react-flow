@@ -8,12 +8,13 @@ import ReactFlow, {
   Background,
   updateEdge,
 } from 'react-flow-renderer';
-import { Input, Button, Modal } from 'antd';
+import { Input, Button, Modal, Collapse } from 'antd';
 import { IoIosCheckmarkCircle, IoIosCloseCircle } from 'react-icons/io';
 import SideBar from './Sidebar';
 import CustomEdge from './CustomEdge';
 import './index.css';
 const { TextArea } = Input;
+const { Panel } = Collapse;
 
 const initialElements = [
   {
@@ -170,7 +171,9 @@ const DnDFlow = () => {
     var connections = elements.filter((el) => el.source !== undefined);
     return connections.filter((conn) => conn.source === nodeId)[0];
   };
-
+  const callback = (key) => {
+    console.log(key);
+  }
   const generateScenarios = () => {
     var outputsList = elements.filter((e) => e.type === 'output');
     var connections = elements.filter((el) => el.source !== undefined);
@@ -253,23 +256,24 @@ const DnDFlow = () => {
     var listValues = [];
     allDictionaries.forEach((element) => {
       listValues.push(
-        <div id={'scenario-' + element.key}>
-          <h2 style={{ marginLeft: 5 }}>{element.description}</h2>
-          <ul>
-            {element.scenarios.map((sce, index) => {
-              var nextIndex = index + 1;
-              const nextElement = element.scenarios[nextIndex];
-              console.log(nextElement)
-              if (sce.isConnection === undefined) {
-                return (
-                  <p id={sce.key} style={{ marginLeft: '1%' }}>
-                    <li>{nextElement && nextElement.isConnection ? `${sce.value} (${nextElement.value})` : sce.value}</li>
-                  </p>
-                );
-              }
-            })}
-          </ul>
-        </div>
+        <>
+          <Panel key={element.key} header={element.description}>
+            <ul>
+              {element.scenarios.map((sce, index) => {
+                var nextIndex = index + 1;
+                const nextElement = element.scenarios[nextIndex];
+                console.log(nextElement)
+                if (sce.isConnection === undefined) {
+                  return (
+                    <p id={sce.key}>
+                      <li>{nextElement && nextElement.isConnection ? `${sce.value} (${nextElement.value})` : sce.value}</li>
+                    </p>
+                  );
+                }
+              })}
+            </ul>
+          </Panel>
+        </>
       );
     });
     // Clean the dictionary.
@@ -341,55 +345,26 @@ const DnDFlow = () => {
                     showCount
                     value={nodeName}
                     maxLength={200}
-                    placeholder="Altere aqui"
+                    placeholder="Change here..."
                     rows={4}
                     onChange={(event) => setNodeNameValue(event.target.value)}
                   />
                 </Modal>
-                {edgeVisible && (
-                  <>
-                    <Input
-                      id="txt-edge"
-                      autoFocus
-                      value={edgeDescription}
-                      placeholder="Altere aqui"
-                      style={{
-                        width: '200px',
-                        position: '',
-                        left: `${modalPosition.x}px`,
-                        top: `${modalPosition.y + 100}px`,
-                        zIndex: 10,
-                      }}
-                      onChange={(event) => setEdgeDescription(event.target.value)}
-                    />
-                    <Button
-                      type="primary"
-                      shape="circle"
-                      icon={<IoIosCheckmarkCircle />}
-                      style={{
-                        position: 'absolute',
-                        left: `${modalPosition.x + 205}px`,
-                        top: `${modalPosition.y + 100}px`,
-                        zIndex: 10,
-                        backgroundColor: '#4CAF50',
-                      }}
-                      onClick={() => onEdgeUpdateText()}
-                    />
-                    <Button
-                      type="primary"
-                      danger
-                      shape="circle"
-                      icon={<IoIosCloseCircle />}
-                      style={{
-                        position: 'absolute',
-                        left: `${modalPosition.x + 240}px`,
-                        top: `${modalPosition.y + 100}px`,
-                        zIndex: 10,
-                      }}
-                      onClick={() => closeEdgeInput()}
-                    />
-                  </>
-                )}
+                 <Modal title="Egde Description" visible={edgeVisible} centered
+                  onOk={() => onEdgeUpdateText()}
+                  onCancel={() => closeEdgeInput()}
+                >
+                  <TextArea
+                    id="txt-edge"
+                    autoFocus
+                    showCount
+                    value={edgeDescription}
+                    maxLength={200}
+                    placeholder="Change here..."
+                    rows={4}
+                    onChange={(event) =>  setEdgeDescription(event.target.value)}
+                  />
+                </Modal>              
                 <MiniMap />
                 <Controls />
                 <SideBar />
@@ -401,7 +376,9 @@ const DnDFlow = () => {
             <Button style={{ margin: '10px' }} onClick={() => generateScenarios()}>
               Gerar Cenários
             </Button>
-            {scenarios}
+              <Collapse defaultActiveKey={['1']} onChange={callback}>
+                {scenarios}
+            </Collapse>
           </div>
         </div>
       </div>
