@@ -315,7 +315,7 @@ const DnDFlow = () => {
             <div className="reactflow-wrapper" ref={reactFlowWrapper}>
               <ReactFlow
                 elements={elements}
-                size={100}
+                size= {100}
                 onConnect={onConnect}
                 onElementsRemove={onElementsRemove}
                 onLoad={onLoad}
@@ -331,21 +331,69 @@ const DnDFlow = () => {
                 edgeTypes={edgeTypes}
                 key="edges"
               >
-                <Modal title="Node Description" visible={textAreaVisible} centered
+                {textAreaVisible && (
+                  <>
+                  <Modal title="Node Description" visible={textAreaVisible} centered
                   onOk={() => modifyTextInputArea()}
                   onCancel={() => closeInputArea()}
-                >
+                  >                 
                   <TextArea
-                    id="txta-node-name"
-                    autoFocus
-                    showCount
-                    value={nodeName}
-                    maxLength={200}
-                    placeholder="Altere aqui"
-                    rows={4}
-                    onChange={(event) => setNodeNameValue(event.target.value)}
-                  />
+                      id="txta-node-name"
+                      autoFocus
+                      showCount
+                      value={nodeName}
+                      maxLength={200}
+                      placeholder="Altere aqui"
+                      rows= {4}
+                      onChange={(event) => setNodeNameValue(event.target.value)}
+                    />
                 </Modal>
+                    {/* <TextArea
+                      id="txta-node-name"
+                      autoFocus
+                      showCount
+                      value={nodeName}
+                      maxLength={150}
+                      placeholder="Altere aqui"
+                      autoSize
+                      style={{
+                        width:"50%",
+                        position: 'absolute',
+                        left: "30%",
+                        top: "30%",
+                        zIndex: 10,
+                      }}
+                      onChange={(event) => setNodeNameValue(event.target.value)}
+                    /> */}
+                    {/* <Button
+                      type="primary"
+                      shape="circle"
+                      icon={<IoIosCheckmarkCircle />}
+                      style={{
+                        position: 'absolute',
+                        left: "75.5%",
+                        top: "36.5%",
+                        zIndex: 10,
+                        backgroundColor: '#4CAF50',
+                      }}
+                      onClick={() => modifyTextInputArea()}
+                    />
+                    <Button
+                      type="primary"
+                      danger
+                      shape="circle"
+                      icon={<IoIosCloseCircle />}
+                      style={{
+                        position: 'absolute',
+                        position: 'absolute',
+                        left: "78.5%",
+                        top: "36.5%",
+                        zIndex: 10,
+                      }}
+                      onClick={() => closeInputArea()}
+                    /> */}
+                  </>
+                )}
                 {edgeVisible && (
                   <>
                     <Input
