@@ -7,15 +7,24 @@ import ReactFlow, {
   MiniMap,
   Background,
   updateEdge,
+  getBezierPath,
+  getEdgeCenter,
+  getMarkerEnd,
 } from 'react-flow-renderer';
 import { Input, Button, Modal, Collapse } from 'antd';
-import { IoIosCheckmarkCircle, IoIosCloseCircle } from 'react-icons/io';
 import SideBar from './Sidebar';
 import CustomEdge from './CustomEdge';
+// import ButtonEdge from './ButtonEdge';
+import {
+  SettingFilled
+} from '@ant-design/icons';
 import './index.css';
+
 const { TextArea } = Input;
 const { Panel } = Collapse;
-
+const foreignObjectSizeWidth = 150;
+const foreignObjectSizeHeight = 100;
+const foreignObjectSizeXY = 40;
 const initialElements = [
   {
     id: '0',
@@ -39,11 +48,88 @@ const DnDFlow = () => {
   const [scenarios, setScenarios] = useState(null);
   const [allDictionaries, setDictionaries] = useState([]);
 
-  const edgeTypes = {
-    custom: CustomEdge,
+  const onEdgeClick = (evt, id) => {
+    evt.stopPropagation();
+    setEdgeSelected({ id: id });
+    setEdgeInputVisible(true);
   };
-  const onConnect = (params) => setElements((els) => addEdge(params, els));
 
+  function ButtonEdge({
+    id,
+    sourceX,
+    sourceY,
+    targetX,
+    targetY,
+    sourcePosition,
+    targetPosition,
+    style = {width:'200px'},
+    data,
+    arrowHeadType,
+    markerEndId,
+  }) {
+    const edgePath = getBezierPath({
+      sourceX,
+      sourceY,
+      sourcePosition,
+      targetX,
+      targetY,
+      targetPosition,
+    });
+    const markerEnd = getMarkerEnd(arrowHeadType, markerEndId);
+    const [edgeCenterX, edgeCenterY] = getEdgeCenter({
+      sourceX,
+      sourceY,
+      targetX,
+      targetY,
+    });
+
+    return (
+      <>
+        <path
+          id={id}
+          style={style}
+          className="react-flow__edge-path"
+          d={edgePath}
+          markerEnd={markerEnd}
+        />
+        <foreignObject
+          width={foreignObjectSizeWidth}
+          height={foreignObjectSizeHeight}
+          x={edgeCenterX - foreignObjectSizeXY / 2}
+          y={edgeCenterY - foreignObjectSizeXY / 2}
+          className="edgebutton-foreignobject"
+          requiredExtensions="http://www.w3.org/1999/xhtml"
+        >
+          {/* <body style={{width: '100px', height: '100px'}}> */}
+          {/* <body> */}
+            <button
+              className="edgebutton"
+              onClick={(event) => onEdgeClick(event, id)}
+            >
+              <SettingFilled />
+            </button> 
+            <text style={{width: '200px', height:'200px', overflowWrap: 'break-word'}}>
+            <textPath href={`#${id}`} style={{ fontSize: '12px', width: '200px' }} startOffset="50%" textAnchor="middle">
+              {data ? data.text : ""}
+            </textPath>
+          </text>             
+          {/* </body> */}
+        </foreignObject>
+      </>
+    );
+  }
+  const edgeTypes = {
+    buttonedge: ButtonEdge,
+  };
+
+  // const onConnect = (params) => setElements((els) => addEdge(params, els));
+  const onConnect = (params) => {
+    setElements((els) => {
+      params.id = `el-${params.source}-${params.target}`
+      params.type = 'buttonedge'
+      return addEdge(params, els)
+    });
+  }
   const onElementsRemove = (elementsToRemove) =>
     setElements((els) => removeElements(elementsToRemove, els));
 
@@ -65,8 +151,9 @@ const DnDFlow = () => {
         if (el.id === edgeSelected.id) {
           // it's important that you create a new object here
           // in order to notify react flow about the change
+          el.data = { text: edgeDescription };
           el.label = edgeDescription;
-          el.className = 'normal-edge';
+          // el.className = 'normal-edge';
         }
         return el;
       })
@@ -131,10 +218,6 @@ const DnDFlow = () => {
           node.position = el.position;
           setNodeSelected(node);
           setModalPosition(position)
-          console.log("modal")
-          console.log(modalPosition)
-          console.log("Node")
-          console.log(position)
         }
 
         return el;
@@ -167,13 +250,11 @@ const DnDFlow = () => {
     var connections = elements.filter((el) => el.source !== undefined);
     return connections.filter((conn) => conn.target === scenarioLast.source)[0];
   };
-  const getConnection = (nodeId) => {
-    var connections = elements.filter((el) => el.source !== undefined);
-    return connections.filter((conn) => conn.source === nodeId)[0];
-  };
+
   const callback = (key) => {
     console.log(key);
   }
+
   const generateScenarios = () => {
     var outputsList = elements.filter((e) => e.type === 'output');
     var connections = elements.filter((el) => el.source !== undefined);
@@ -214,7 +295,7 @@ const DnDFlow = () => {
           if (connectionSelected.label) {
             scenarioLast = {
               key: `${scenario.key}-${connectionSelected.source}-${connectionSelected.target
-                }-${countConn + 1}`,
+                }-${countConn}`,
               source: connectionSelected.source,
               target: connectionSelected.target,
               value: connectionSelected.label,
@@ -280,7 +361,7 @@ const DnDFlow = () => {
     setDictionaries([]);
     setScenarios(listValues);
   };
-
+  const onNodeDragStop = (event, node) => console.log('drag stop', node);
   const onDrop = (event) => {
     event.preventDefault();
 
@@ -320,8 +401,9 @@ const DnDFlow = () => {
               <ReactFlow
                 elements={elements}
                 size={100}
-                onConnect={onConnect}
+                onConnect={(params) => onConnect(params)}
                 onElementsRemove={onElementsRemove}
+                onNodeDragStop={onNodeDragStop}
                 onLoad={onLoad}
                 onDrop={onDrop}
                 onDragOver={onDragOver}
@@ -350,7 +432,7 @@ const DnDFlow = () => {
                     onChange={(event) => setNodeNameValue(event.target.value)}
                   />
                 </Modal>
-                 <Modal title="Egde Description" visible={edgeVisible} centered
+                <Modal title="Egde Description" visible={edgeVisible} centered
                   onOk={() => onEdgeUpdateText()}
                   onCancel={() => closeEdgeInput()}
                 >
@@ -359,12 +441,12 @@ const DnDFlow = () => {
                     autoFocus
                     showCount
                     value={edgeDescription}
-                    maxLength={200}
+                    maxLength={60}
                     placeholder="Change here..."
                     rows={4}
-                    onChange={(event) =>  setEdgeDescription(event.target.value)}
+                    onChange={(event) => setEdgeDescription(event.target.value)}
                   />
-                </Modal>              
+                </Modal>
                 <MiniMap />
                 <Controls />
                 <SideBar />
@@ -376,8 +458,8 @@ const DnDFlow = () => {
             <Button style={{ margin: '10px' }} onClick={() => generateScenarios()}>
               Gerar Cenários
             </Button>
-              <Collapse defaultActiveKey={['1']} onChange={callback}>
-                {scenarios}
+            <Collapse defaultActiveKey={['1']} onChange={callback}>
+              {scenarios}
             </Collapse>
           </div>
         </div>

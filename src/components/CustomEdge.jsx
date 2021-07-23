@@ -16,14 +16,13 @@ export default function CustomEdge({
 }) {
   const edgePath = getBezierPath({ sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition });
   const markerEnd = getMarkerEnd(arrowHeadType, markerEndId);
-console.log("Entrou")
+
   return (
     <>
       <path id={id} style={style} className="react-flow__edge-path" d={edgePath} markerEnd={markerEnd} />
       <text>
-        <textPath href={`#${id}`} style={{ fontSize: '12px' }} startOffset="50%" textAnchor="middle" >
-        {data = <input style={{ fontSize: '12px' }} startOffset="50%" textAnchor="middle" placeholder="Escreva aqui"></input>}
-          {/* {data.text} */}
+        <textPath href={`#${id}`} style={{ fontSize: '12px' }} startOffset="50%" textAnchor="middle">
+          {data ? data.text : ""}
         </textPath>
       </text>
     </>
