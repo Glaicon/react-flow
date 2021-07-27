@@ -6,16 +6,25 @@ import ReactFlow, {
   Controls,
   MiniMap,
   Background,
-  updateEdge
+  updateEdge,
+  getBezierPath,
+  getEdgeCenter,
+  getMarkerEnd,
 } from 'react-flow-renderer';
 import { Input, Button, Modal, Collapse } from 'antd';
 import SideBar from './Sidebar';
-
+import CustomEdge from './CustomEdge';
+// import ButtonEdge from './ButtonEdge';
+import {
+  SettingFilled
+} from '@ant-design/icons';
 import './index.css';
 
 const { TextArea } = Input;
 const { Panel } = Collapse;
-
+const foreignObjectSizeWidth = 150;
+const foreignObjectSizeHeight = 100;
+const foreignObjectSizeXY = 40;
 const initialElements = [
   {
     id: '0',
@@ -31,18 +40,96 @@ const DnDFlow = () => {
   const [nodeSelected, setNodeSelected] = useState({});
   const [edgeSelected, setEdgeSelected] = useState({});
   const [elements, setElements] = useState(initialElements);
+  const [modalPosition, setModalPosition] = useState('');
   const [nodeName, setNodeNameValue] = useState('');
   const [edgeDescription, setEdgeDescription] = useState('');
   const reactFlowWrapper = useRef(null);
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
   const [scenarios, setScenarios] = useState(null);
   const [allDictionaries, setDictionaries] = useState([]);
-  const [scenariosKey, setScenariosKey] = useState();
-  const [painelKeys, setPainelKeys] = useState([1]);
-  const [every, setEvery] = useState(false);
 
-  const onConnect = (params) => setElements((els) => addEdge(params, els));
+  const onEdgeClick = (evt, id) => {
+    evt.stopPropagation();
+    setEdgeSelected({ id: id });
+    setEdgeInputVisible(true);
+  };
 
+  function ButtonEdge({
+    id,
+    sourceX,
+    sourceY,
+    targetX,
+    targetY,
+    sourcePosition,
+    targetPosition,
+    style = {width:'200px'},
+    data,
+    arrowHeadType,
+    markerEndId,
+  }) {
+    const edgePath = getBezierPath({
+      sourceX,
+      sourceY,
+      sourcePosition,
+      targetX,
+      targetY,
+      targetPosition,
+    });
+    const markerEnd = getMarkerEnd(arrowHeadType, markerEndId);
+    const [edgeCenterX, edgeCenterY] = getEdgeCenter({
+      sourceX,
+      sourceY,
+      targetX,
+      targetY,
+    });
+
+    return (
+      <>
+        <path
+          id={id}
+          style={style}
+          className="react-flow__edge-path"
+          d={edgePath}
+          markerEnd={markerEnd}
+        />
+        <foreignObject
+          width={foreignObjectSizeWidth}
+          height={foreignObjectSizeHeight}
+          x={edgeCenterX - foreignObjectSizeXY / 2}
+          y={edgeCenterY - foreignObjectSizeXY / 2}
+          className="edgebutton-foreignobject"
+          requiredExtensions="http://www.w3.org/1999/xhtml"
+        >
+          {/* <body style={{width: '100px', height: '100px'}}> */}
+          {/* <body> */}
+            <button
+              className="edgebutton"
+              onClick={(event) => onEdgeClick(event, id)}
+            >
+              <SettingFilled />
+            </button> 
+            <text style={{width: '200px', height:'200px', overflowWrap: 'break-word'}}>
+            <textPath href={`#${id}`} style={{ fontSize: '12px', width: '200px' }} startOffset="50%" textAnchor="middle">
+              {data ? data.text : ""}
+            </textPath>
+          </text>             
+          {/* </body> */}
+        </foreignObject>
+      </>
+    );
+  }
+  const edgeTypes = {
+    buttonedge: ButtonEdge,
+  };
+
+  // const onConnect = (params) => setElements((els) => addEdge(params, els));
+  const onConnect = (params) => {
+    setElements((els) => {
+      params.id = `el-${params.source}-${params.target}`
+      params.type = 'buttonedge'
+      return addEdge(params, els)
+    });
+  }
   const onElementsRemove = (elementsToRemove) =>
     setElements((els) => removeElements(elementsToRemove, els));
 
@@ -77,13 +164,15 @@ const DnDFlow = () => {
   };
 
   const onEdgeDoubleClick = (edge) => {
-    // var node = elements.find((e) => e.id === edge.source);
+    var node = elements.find((e) => e.id === edge.source);
+    setModalPosition(node.position);
     setEdgeSelected(edge);
     setEdgeInputVisible(true);
   };
 
   const onNodeDoubleClick = (node) => {
     setNodeSelected(node);
+    // setModalPosition(nodeSelected.position);
     setTextAreaVisible(true);
     console.log(nodeSelected.position)
   };
@@ -128,6 +217,7 @@ const DnDFlow = () => {
           };
           node.position = el.position;
           setNodeSelected(node);
+          setModalPosition(position)
         }
 
         return el;
@@ -245,10 +335,7 @@ const DnDFlow = () => {
 
     // Fills the scenarios in the painel.
     var listValues = [];
-    var listKeys = [];
     allDictionaries.forEach((element) => {
-      // Fills active keys of scenarios.
-      listKeys.push(element.key)
       listValues.push(
         <>
           <Panel key={element.key} header={element.description}>
@@ -256,6 +343,7 @@ const DnDFlow = () => {
               {element.scenarios.map((sce, index) => {
                 var nextIndex = index + 1;
                 const nextElement = element.scenarios[nextIndex];
+                console.log(nextElement)
                 if (sce.isConnection === undefined) {
                   return (
                     <p id={sce.key}>
@@ -272,7 +360,6 @@ const DnDFlow = () => {
     // Clean the dictionary.
     setDictionaries([]);
     setScenarios(listValues);
-    setPainelKeys(listKeys);
   };
   const onNodeDragStop = (event, node) => console.log('drag stop', node);
   const onDrop = (event) => {
@@ -301,18 +388,9 @@ const DnDFlow = () => {
     setElements((es) => es.concat(newNode));
   };
 
-  const expandAll = () => {
-    console.log(scenariosKey)
-    setScenariosKey(painelKeys)
-    console.log(painelKeys)
-
-  }
-  const collapseAll = () => {
-    setScenariosKey([])
-  }
-
   return (
     <>
+
       <div className="wrapper">
         <div className="paineltxa">
           <TextArea autoSize placeholder="Escreva aqui..." />
@@ -336,6 +414,8 @@ const DnDFlow = () => {
                 onEdgeDoubleClick={(event, node) => onEdgeDoubleClick(node)}
                 onEdgeUpdate={onEdgeUpdate}
                 snapToGrid={true}
+                edgeTypes={edgeTypes}
+                key="edges"
               >
                 <Modal title="Node Description" visible={textAreaVisible} centered
                   onOk={() => modifyTextInputArea()}
@@ -376,18 +456,9 @@ const DnDFlow = () => {
           </ReactFlowProvider>
           <div className="scenarios__controls">
             <Button style={{ margin: '10px' }} onClick={() => generateScenarios()}>
-              Generate Scenarios
+              Gerar Cenários
             </Button>
-            <Button style={{ float: 'right', margin: '10px' }} onClick={(e) => collapseAll()}>
-              Collapse All
-            </Button>
-            <Button style={{ float: 'right', margin: '10px' }} onClick={(e) => expandAll()}>
-              Expand All
-            </Button>
-            <Collapse showArrow onChange={(e) => setScenariosKey(e)}
-              activeKey={scenariosKey}
-              collapsible
-            >
+            <Collapse defaultActiveKey={['1']} onChange={callback}>
               {scenarios}
             </Collapse>
           </div>

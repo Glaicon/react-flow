@@ -8,13 +8,32 @@ import ReactFlow, {
   Background,
   updateEdge
 } from 'react-flow-renderer';
-import { Input, Button, Modal, Collapse } from 'antd';
+import { Input, Button, Modal } from 'antd';
 import SideBar from './Sidebar';
-
+import Collapse from "@kunukn/react-collapse";
+import "./styles.scss";
+import Down from "./Down";
 import './index.css';
-
+import { useEffect } from 'react';
+import Block from './Block'
 const { TextArea } = Input;
-const { Panel } = Collapse;
+// const { Panel } = Collapse;
+
+const initialState = [false, false, false];
+function reducer(state, { type, index }) {
+  switch (type) {
+    case "expand-all":
+      return [true, true, true];
+    case "collapse-all":
+      return [false, false, false];
+    case "toggle":
+      state[index] = !state[index];
+      return [...state];
+
+    default:
+      throw new Error();
+  }
+}
 
 const initialElements = [
   {
@@ -37,9 +56,11 @@ const DnDFlow = () => {
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
   const [scenarios, setScenarios] = useState(null);
   const [allDictionaries, setDictionaries] = useState([]);
-  const [scenariosKey, setScenariosKey] = useState();
-  const [painelKeys, setPainelKeys] = useState([1]);
+  const [scenariosKey, setScenariosKey] = useState([]);
+  const [painelKeys, setPainelKeys] = useState(["1"]);
   const [every, setEvery] = useState(false);
+  const [state, dispatch] = React.useReducer(reducer, initialState);
+
 
   const onConnect = (params) => setElements((els) => addEdge(params, els));
 
@@ -161,10 +182,6 @@ const DnDFlow = () => {
     return connections.filter((conn) => conn.target === scenarioLast.source)[0];
   };
 
-  const callback = (key) => {
-    console.log(key);
-  }
-
   const generateScenarios = () => {
     var outputsList = elements.filter((e) => e.type === 'output');
     var connections = elements.filter((el) => el.source !== undefined);
@@ -242,37 +259,107 @@ const DnDFlow = () => {
         console.log(allDictionaries);
       });
     });
-
+    // var listValues = [];
+    // var count = 0;
+    // allDictionaries.map((element, index) => {
+    //   // return (
+    //   listValues.push(
+    //     <>
+    //     <Block
+    //       title="Cargo details teste Glaicon"
+    //       isOpen={state[0]}
+    //       onToggle={() => dispatch({ type: "toggle", index: 0 })}
+    //     >
+    //       <div className="content">
+    //         <p>Paragraph of text</p>
+    //         <p>Another paragraph.</p>
+    //         <p>Other content.</p>
+    //       </div>
+    //     </Block>
+    //      <Block
+    //      title="Cargo details teste Glaicon"
+    //      isOpen={state[1]}
+    //      onToggle={() => dispatch({ type: "toggle", index: 1 })}
+    //    >
+    //      <div className="content">
+    //        <p>Paragraph of text</p>
+    //        <p>Another paragraph.</p>
+    //        <p>Other content.</p>
+    //      </div>
+    //    </Block>
+    //    </>
+    //     // )
+    //   )
+    //   count++
+    // })
     // Fills the scenarios in the painel.
     var listValues = [];
-    var listKeys = [];
-    allDictionaries.forEach((element) => {
+    allDictionaries.map((element, index) => {
       // Fills active keys of scenarios.
-      listKeys.push(element.key)
+      setScenariosKey(oldkeys => [...oldkeys, element.key]);
       listValues.push(
         <>
-          <Panel key={element.key} header={element.description}>
-            <ul>
-              {element.scenarios.map((sce, index) => {
-                var nextIndex = index + 1;
-                const nextElement = element.scenarios[nextIndex];
-                if (sce.isConnection === undefined) {
-                  return (
-                    <p id={sce.key}>
-                      <li>{nextElement && nextElement.isConnection ? `${sce.value} (${nextElement.value})` : sce.value}</li>
-                    </p>
-                  );
-                }
-              })}
-            </ul>
-          </Panel>
+          {/* {allDictionaries.map((element, index) => { */}
+          <>
+            {/* <Block
+              title="Cargo details"
+              isOpen={state[0]}
+              onToggle={() => dispatch({ type: "toggle", index: 0 })}
+            >
+              <div className="content">
+                <p>Paragraph of text.</p>
+                <p>Another paragraph.</p>
+                <p>Other content.</p>
+              </div>
+            </Block>
+
+            <Block
+              title="Your details"
+              isOpen={state[1]}
+              onToggle={() => dispatch({ type: "toggle", index: 1 })}
+            >
+              <div className="content">
+                <p>Paragraph of text.</p>
+                <p>Another paragraph.</p>
+                <p>Other content.</p>
+              </div>
+            </Block> */}
+          </>
+          {/* })} */}
+          <div className="block">
+            <button className="btn toggle" type="button" 
+            onClick={document.getElementById('id1').style.color = 'red'}
+            >
+              <span>{element.description}</span>
+              <Down isOpen={state[1]} />
+            </button>
+            <Collapse layoutEffect isOpen={state[1]}>
+              <div className="content" id={"id1"}>
+                <ul>
+                  {element.scenarios.map((sce, index) => {
+                    var nextIndex = index + 1;
+                    const nextElement = element.scenarios[nextIndex];
+                    if (sce.isConnection === undefined) {
+                      return (
+
+                        <p id={sce.key}>
+                          <li>{nextElement && nextElement.isConnection ? `${sce.value} (${nextElement.value})` : sce.value}</li>
+                        </p>
+                      );
+                    }
+                  })}
+                </ul>
+              </div>
+            </Collapse>
+          </div>
+
         </>
       );
     });
     // Clean the dictionary.
     setDictionaries([]);
+    console.log(listValues)
     setScenarios(listValues);
-    setPainelKeys(listKeys);
   };
   const onNodeDragStop = (event, node) => console.log('drag stop', node);
   const onDrop = (event) => {
@@ -300,16 +387,6 @@ const DnDFlow = () => {
 
     setElements((es) => es.concat(newNode));
   };
-
-  const expandAll = () => {
-    console.log(scenariosKey)
-    setScenariosKey(painelKeys)
-    console.log(painelKeys)
-
-  }
-  const collapseAll = () => {
-    setScenariosKey([])
-  }
 
   return (
     <>
@@ -378,23 +455,37 @@ const DnDFlow = () => {
             <Button style={{ margin: '10px' }} onClick={() => generateScenarios()}>
               Generate Scenarios
             </Button>
-            <Button style={{ float: 'right', margin: '10px' }} onClick={(e) => collapseAll()}>
-              Collapse All
-            </Button>
-            <Button style={{ float: 'right', margin: '10px' }} onClick={(e) => expandAll()}>
+            <Button style={{ float: 'right', margin: '10px' }} onClick={() => dispatch({ type: "expand-all" })}
+              disabled={state.every(s => s === true)}>
               Expand All
             </Button>
-            <Collapse showArrow onChange={(e) => setScenariosKey(e)}
-              activeKey={scenariosKey}
-              collapsible
+            <Button style={{ float: 'right', margin: '10px' }} onClick={() => dispatch({ type: "collapse-all" })}
+              disabled={state.every(s => s === false)}>
+              Collapse All
+            </Button>
+            {
+              scenarios
+            }
+            <Block
+              title="Your details Glaicon"
+              isOpen={state[1]}
+              onToggle={() => dispatch({ type: "toggle", index: 1 })}
             >
-              {scenarios}
-            </Collapse>
+              <div className="content">
+                <p>Paragraph of text.</p>
+                <p>Another paragraph.</p>
+                <p>Other content.</p>
+              </div>
+            </Block>
           </div>
         </div>
       </div>
     </>
   );
 };
+
+<script>
+  document.getElementById("p2").style.color = "blue";
+</script>
 
 export default DnDFlow;
